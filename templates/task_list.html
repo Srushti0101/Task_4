@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh; padding: 30px 15px; color: #2d3748;
+  }
+  .container { max-width: 900px; margin: auto; }
+  h1 { color: #fff; text-align: center; font-size: 2.2rem; margin-bottom: 25px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+  .stat { background: rgba(255,255,255,.95); border-radius: 16px; padding: 18px; text-align: center;
+          box-shadow: 0 8px 20px rgba(0,0,0,.12); text-decoration: none; color: inherit; transition: transform .2s; }
+  .stat:hover { transform: translateY(-4px); }
+  .stat.active { outline: 3px solid #fbbf24; }
+  .stat b { display: block; font-size: 2rem; color: #667eea; }
+  .stat span { font-size: .85rem; color: #718096; }
+
+  .card { background: #fff; border-radius: 16px; padding: 22px; margin-bottom: 25px;
+          box-shadow: 0 8px 25px rgba(0,0,0,.15); }
+  .card h2 { font-size: 1.15rem; margin-bottom: 15px; }
+
+  form .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  form p { margin: 0; }
+  label { display: block; font-size: .8rem; font-weight: 500; margin-bottom: 4px; color: #4a5568; }
+  input, select, textarea {
+    width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 10px;
+    font-family: inherit; font-size: .9rem; transition: border .2s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; }
+  .btn { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; padding: 11px 26px;
+         border-radius: 10px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .2s; }
+  .btn:hover { opacity: .88; }
+
+  .task { display: flex; justify-content: space-between; align-items: center; gap: 15px;
+          background: #fff; border-radius: 14px; padding: 16px 20px; margin-bottom: 12px;
+          border-left: 6px solid #cbd5e0; box-shadow: 0 4px 14px rgba(0,0,0,.1); flex-wrap: wrap; }
+  .task.high { border-left-color: #f56565; }
+  .task.medium { border-left-color: #ed8936; }
+  .task.low { border-left-color: #48bb78; }
+  .task.completed .title { text-decoration: line-through; color: #a0aec0; }
+  .title { font-weight: 600; font-size: 1.05rem; }
+  .desc { font-size: .85rem; color: #718096; margin: 3px 0 8px; }
+
+  .badge { display: inline-block; font-size: .72rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; margin-right: 6px; }
+  .s-pending { background: #fefcbf; color: #975a16; }
+  .s-in_progress { background: #bee3f8; color: #2b6cb0; }
+  .s-completed { background: #c6f6d5; color: #276749; }
+  .p-high { background: #fed7d7; color: #c53030; }
+  .p-medium { background: #feebc8; color: #c05621; }
+  .p-low { background: #e6fffa; color: #2c7a7b; }
+  .due { font-size: .78rem; color: #718096; }
+  .overdue { color: #e53e3e; font-weight: 600; }
+
+  .actions { display: flex; gap: 8px; }
+  .actions a, .actions button { border: none; border-radius: 8px; padding: 8px 14px; font-size: .8rem;
+          font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit; }
+  .done { background: #c6f6d5; color: #276749; }
+  .del { background: #fed7d7; color: #c53030; }
+  .empty { text-align: center; color: #fff; padding: 30px; font-size: 1.05rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>✅ My Task Manager</h1>
+
+  <div class="stats">
+    <a href="{% url 'task_list' %}" class="stat {% if not active_filter %}active{% endif %}"><b>{{ total }}</b><span>All Tasks</span></a>
+    <a href="?status=pending" class="stat {% if active_filter == 'pending' %}active{% endif %}"><b>{{ pending }}</b><span>Pending</span></a>
+    <a href="?status=in_progress" class="stat {% if active_filter == 'in_progress' %}active{% endif %}"><b>{{ in_progress }}</b><span>In Progress</span></a>
+    <a href="?status=completed" class="stat {% if active_filter == 'completed' %}active{% endif %}"><b>{{ completed }}</b><span>Completed</span></a>
+  </div>
+
+  <div class="card">
+    <h2>➕ Add New Task</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div class="row">
+        <div>{{ form.title.label_tag }}{{ form.title }}</div>
+        <div>{{ form.due_date.label_tag }}{{ form.due_date }}</div>
+      </div>
+      <div class="row">
+        <div>{{ form.status.label_tag }}{{ form.status }}</div>
+        <div>{{ form.priority.label_tag }}{{ form.priority }}</div>
+      </div>
+      <div style="margin-bottom:12px">{{ form.description.label_tag }}{{ form.description }}</div>
+      <button class="btn" type="submit">Add Task</button>
+    </form>
+  </div>
+
+  {% for task in tasks %}
+  <div class="task {{ task.priority }} {{ task.status }}">
+    <div>
+      <div class="title">{{ task.title }}</div>
+      {% if task.description %}<div class="desc">{{ task.description }}</div>{% endif %}
+      <span class="badge s-{{ task.status }}">{{ task.get_status_display }}</span>
+      <span class="badge p-{{ task.priority }}">{{ task.get_priority_display }}</span>
+      <span class="due {% if task.due_date < today and task.status != 'completed' %}overdue{% endif %}">
+        📅 {{ task.due_date|date:"d M Y" }}{% if task.due_date < today and task.status != 'completed' %} (Overdue){% endif %}
+      </span>
+    </div>
+    <div class="actions">
+      {% if task.status != 'completed' %}
+        <a class="done" href="{% url 'task_complete' task.pk %}">✔ Done</a>
+      {% endif %}
+      <form method="post" action="{% url 'task_delete' task.pk %}" onsubmit="return confirm('Delete this task?')">
+        {% csrf_token %}
+        <button class="del" type="submit">🗑 Delete</button>
+      </form>
+    </div>
+  </div>
+  {% empty %}
+    <div class="empty">No tasks here yet. Add your first one above! 🎉</div>
+  {% endfor %}
+</div>
+</body>
+</html>
